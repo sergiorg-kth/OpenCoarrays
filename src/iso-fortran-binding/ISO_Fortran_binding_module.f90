@@ -34,9 +34,7 @@ contains
     integer(c_int), pointer :: array(:,:)
 
     call c_f_pointer(dv%base_addr,array,[2,1])
-
     address = c_loc(array(subscripts(1),subscripts(2)))
-
   end function
 
 end module
