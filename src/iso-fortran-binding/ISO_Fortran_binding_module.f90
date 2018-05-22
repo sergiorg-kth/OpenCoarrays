@@ -26,7 +26,7 @@ module ISO_Fortran_binding_module
 
 contains
 
-  function CFI_address(dv, subscripts) bind(C,name="CFI_address") result(address)
+  function CFI_address_(dv, subscripts) bind(C,name="CFI_address_") result(address)
     !! C signature: void *CFI_address (const CFI_cdesc_t *dv, const CFI_index_t subscripts[])
     type(CFI_cdesc_t), intent(in), target :: dv
     integer(CFI_index_t), intent(in) :: subscripts(:)
@@ -47,11 +47,23 @@ contains
     class(*), pointer :: array14D(:,:,:,:,:,:,:,:,:,:,:,:,:,:)
     class(*), pointer :: array15D(:,:,:,:,:,:,:,:,:,:,:,:,:,:,:)
     integer :: i
+
     associate(s=>subscripts)
     select case (dv%rank)
       case(1)
-        call c_f_pointer(dv%base_addr,array01D,[(dv%dim(i)%extent,i=1,dv%rank)])
-        address = c_loc(array01D(s(1)))
+
+        ! TODO: remove delete_me block once unlimited polymorphic versions work with the target compiler(s):
+        delete_me: block 
+          integer(CFI_index_t), pointer :: array(:)
+          call c_f_pointer(dv%base_addr,array,[(dv%dim(i)%extent,i=1,dv%rank)])
+          address = c_loc(array(s(1)))
+        end block delete_me
+
+        ! TODO: remove the if construct code after deleting the delete_me block above
+        restore_me: if (.false.) then
+          call c_f_pointer(dv%base_addr,array01D,[(dv%dim(i)%extent,i=1,dv%rank)])
+          address = c_loc(array01D(s(1)))
+        end if restore_me
       case(2)
         call c_f_pointer(dv%base_addr,array02D,[(dv%dim(i)%extent,i=1,dv%rank)])
         address = c_loc(array02D(s(1),s(2)))
